@@ -1,0 +1,42 @@
+services:
+  skills-server:
+    build: .
+    container_name: skills-server
+    restart: unless-stopped
+    environment:
+      SKILLS_DIR: /data/skills
+      API_KEYS: ${API_KEYS:-dev-key}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-change-me}
+      RUNNER_DEFAULT_IMAGE: ${RUNNER_DEFAULT_IMAGE:-python:3.12-slim}
+      RUNNER_MEMORY: ${RUNNER_MEMORY:-128m}
+      RUNNER_CPUS: ${RUNNER_CPUS:-0.5}
+      RUNNER_PIDS_LIMIT: ${RUNNER_PIDS_LIMIT:-64}
+      RUNNER_TIMEOUT: ${RUNNER_TIMEOUT:-30}
+      RUNNER_NETWORK: ${RUNNER_NETWORK:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    volumes:
+      # Mount your skills Git repo here. For a quick start, the repo's ./skills dir is used.
+      - ./skills:/data/skills
+      - /var/run/docker.sock:/var/run/docker.sock:ro   # DinD sandbox execution
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: skills-nginx
+    restart: unless-stopped
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+    depends_on:
+      - skills-server
+
+volumes:
