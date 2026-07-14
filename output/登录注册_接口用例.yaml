@@ -1,0 +1,275 @@
+verdict: 通过
+issues: []
+features:
+  - feature: 手机号注册接口
+    test_cases:
+      - id: TC_001
+        name: 注册接口正常创建新账号
+        type: 正向
+        priority: P0
+        preconditions: 系统中不存在该手机号账号
+        steps: 调用注册接口提交手机号、验证码、密码和协议状态→观察接口返回
+        test_data: 手机号=13800138000，验证码=123456，密码=Abc12345，协议=已勾选
+        expected: 接口返回成功，创建用户账号并返回登录态或注册成功标识
+      - id: TC_002
+        name: 注册接口拒绝已存在手机号
+        type: 逆向
+        priority: P0
+        preconditions: 系统中已存在该手机号账号
+        steps: 调用注册接口提交已注册手机号→观察接口返回
+        test_data: 手机号=13900139000，验证码=123456，密码=Abc12345，协议=已勾选
+        expected: 接口返回账号已存在相关错误码或错误信息，禁止重复注册
+      - id: TC_003
+        name: 注册接口拒绝非法手机号格式
+        type: 逆向
+        priority: P0
+        preconditions: 无
+        steps: 调用注册接口提交非法手机号→观察接口返回
+        test_data: 手机号=12345，验证码=123456，密码=Abc12345，协议=已勾选
+        expected: 接口返回参数校验失败，不创建账号
+      - id: TC_004
+        name: 注册接口校验手机号长度边界
+        type: 边界
+        priority: P1
+        preconditions: 无
+        steps: 分别提交10位和11位手机号注册请求→观察接口返回
+        test_data: 手机号=1380013800 / 13800138000
+        expected: 10位手机号校验失败，11位合法手机号可继续后续校验
+  - feature: 短信验证码发送接口
+    test_cases:
+      - id: TC_005
+        name: 验证码发送接口正常下发验证码
+        type: 正向
+        priority: P0
+        preconditions: 手机号格式合法且未超过发送限制
+        steps: 调用验证码发送接口→观察接口返回
+        test_data: 手机号=13800138000
+        expected: 接口返回发送成功，验证码进入有效期并可用于后续校验
+      - id: TC_006
+        name: 验证码发送接口拒绝重复频繁请求
+        type: 逆向
+        priority: P0
+        preconditions: 同一手机号仍处于倒计时或发送限制窗口内
+        steps: 在限制时间内再次调用验证码发送接口→观察接口返回
+        test_data: 手机号=13800138000
+        expected: 接口返回频率限制错误，不再次发送验证码
+      - id: TC_007
+        name: 验证码发送接口触发单日次数上限
+        type: 逆向
+        priority: P1
+        preconditions: 同一手机号当日已达到发送上限
+        steps: 再次调用验证码发送接口→观察接口返回
+        test_data: 手机号=13800138000
+        expected: 接口返回次数超限错误，不允许继续发送
+      - id: TC_008
+        name: 验证码发送接口空手机号校验
+        type: 边界
+        priority: P1
+        preconditions: 无
+        steps: 调用验证码发送接口且手机号为空→观察接口返回
+        test_data: 手机号为空
+        expected: 接口返回参数缺失或非法错误，禁止发送验证码
+  - feature: 验证码校验接口
+    test_cases:
+      - id: TC_009
+        name: 正确验证码校验通过
+        type: 正向
+        priority: P0
+        preconditions: 已发送且验证码未过期
+        steps: 调用验证码校验接口提交正确验证码→观察接口返回
+        test_data: 手机号=13800138000，验证码=123456
+        expected: 接口返回校验通过，可继续注册或登录流程
+      - id: TC_010
+        name: 错误验证码校验失败
+        type: 逆向
+        priority: P0
+        preconditions: 已发送且验证码未过期
+        steps: 调用验证码校验接口提交错误验证码→观察接口返回
+        test_data: 手机号=13800138000，验证码=000000
+        expected: 接口返回验证码错误，不允许进入下一步
+      - id: TC_011
+        name: 验证码过期后校验失败
+        type: 逆向
+        priority: P0
+        preconditions: 验证码已超过有效期
+        steps: 调用验证码校验接口提交过期验证码→观察接口返回
+        test_data: 手机号=13800138000，验证码=123456
+        expected: 接口返回验证码过期错误，要求重新获取验证码
+      - id: TC_012
+        name: 验证码错误次数达到上限后锁定
+        type: 逆向
+        priority: P0
+        preconditions: 当前验证码未过期
+        steps: 连续提交错误验证码达到3次→再次提交正确验证码→观察接口返回
+        test_data: 手机号=13800138000，验证码=000000
+        expected: 接口返回验证码锁定或需重新获取验证码提示，当前验证码失效
+  - feature: 密码设置与重置接口
+    test_cases:
+      - id: TC_013
+        name: 密码设置接口接受符合规则密码
+        type: 正向
+        priority: P0
+        preconditions: 验证码校验已通过
+        steps: 调用密码设置接口提交合法密码→观察接口返回
+        test_data: 密码=Abc12345
+        expected: 接口返回成功，密码保存并可用于登录
+      - id: TC_014
+        name: 密码设置接口拒绝纯数字密码
+        type: 逆向
+        priority: P0
+        preconditions: 验证码校验已通过
+        steps: 调用密码设置接口提交纯数字密码→观察接口返回
+        test_data: 密码=12345678
+        expected: 接口返回密码复杂度不符合要求错误
+      - id: TC_015
+        name: 密码重置接口拒绝历史重复密码
+        type: 逆向
+        priority: P0
+        preconditions: 用户存在历史密码记录且已完成身份验证
+        steps: 调用密码重置接口提交历史密码→观察接口返回
+        test_data: 新密码=Abc12345
+        expected: 接口返回新密码不能与历史密码重复的错误
+      - id: TC_016
+        name: 密码设置接口校验长度边界
+        type: 边界
+        priority: P1
+        preconditions: 验证码校验已通过
+        steps: 分别提交8位和16位密码→观察接口返回
+        test_data: 密码=Abc12345 / Abc12345Abc12345
+        expected: 8位与16位密码均可通过长度校验，超出范围的密码被拒绝
+  - feature: 账号密码登录接口
+    test_cases:
+      - id: TC_017
+        name: 登录接口使用正确账号密码返回Token
+        type: 正向
+        priority: P0
+        preconditions: 用户账号已存在且未锁定
+        steps: 调用登录接口提交手机号与正确密码→观察接口返回
+        test_data: 手机号=13800138000，密码=Abc12345
+        expected: 接口返回登录成功并下发Token
+      - id: TC_018
+        name: 登录接口拒绝错误密码
+        type: 逆向
+        priority: P0
+        preconditions: 用户账号已存在且未锁定
+        steps: 调用登录接口提交错误密码→观察接口返回
+        test_data: 手机号=13800138000，密码=Wrong123
+        expected: 接口返回账号或密码错误，不下发Token
+      - id: TC_019
+        name: 登录接口在账号锁定期间返回锁定提示
+        type: 逆向
+        priority: P0
+        preconditions: 账号已因连续失败进入锁定期
+        steps: 调用登录接口提交正确密码→观察接口返回
+        test_data: 手机号=13800138000，密码=Abc12345
+        expected: 接口返回账号锁定提示，禁止登录
+      - id: TC_020
+        name: 登录接口校验空密码边界
+        type: 边界
+        priority: P1
+        preconditions: 无
+        steps: 调用登录接口且密码为空→观察接口返回
+        test_data: 手机号=13800138000，密码为空
+        expected: 接口返回参数缺失或非法错误，不执行登录校验
+  - feature: 验证码快捷登录接口
+    test_cases:
+      - id: TC_021
+        name: 快捷登录接口支持已注册手机号登录成功
+        type: 正向
+        priority: P0
+        preconditions: 手机号已注册且验证码有效
+        steps: 调用快捷登录接口提交手机号和正确验证码→观察接口返回
+        test_data: 手机号=13800138000，验证码=123456
+        expected: 接口返回登录成功并下发Token
+      - id: TC_022
+        name: 快捷登录接口错误验证码失败
+        type: 逆向
+        priority: P0
+        preconditions: 手机号已注册且验证码有效
+        steps: 调用快捷登录接口提交错误验证码→观察接口返回
+        test_data: 手机号=13800138000，验证码=000000
+        expected: 接口返回验证码错误，登录失败
+      - id: TC_023
+        name: 快捷登录接口对未注册手机号引导注册
+        type: 正向
+        priority: P1
+        preconditions: 手机号未注册
+        steps: 调用快捷登录接口提交未注册手机号及正确验证码→观察接口返回
+        test_data: 手机号=13700137000，验证码=123456
+        expected: 接口返回需注册或自动注册相关结果，进入账号创建流程
+      - id: TC_024
+        name: 快捷登录接口手机号为空校验
+        type: 边界
+        priority: P1
+        preconditions: 无
+        steps: 调用快捷登录接口且手机号为空→观察接口返回
+        test_data: 手机号为空，验证码=123456
+        expected: 接口返回参数校验失败，不允许继续登录
+  - feature: 第三方授权与绑定接口
+    test_cases:
+      - id: TC_025
+        name: 第三方授权接口正常换取登录态
+        type: 正向
+        priority: P0
+        preconditions: 第三方授权码有效
+        steps: 调用第三方授权接口提交授权码→观察接口返回
+        test_data: 授权平台=微信，授权码=valid_code
+        expected: 接口返回第三方登录成功结果并建立登录态
+      - id: TC_026
+        name: 未绑定手机号的第三方账号返回绑定要求
+        type: 逆向
+        priority: P0
+        preconditions: 第三方账号未绑定手机号
+        steps: 调用第三方登录接口→观察接口返回
+        test_data: 平台=微信
+        expected: 接口返回需要绑定手机号的结果，不直接完成登录
+      - id: TC_027
+        name: 第三方绑定手机号接口正常绑定成功
+        type: 正向
+        priority: P0
+        preconditions: 第三方账号未绑定手机号且手机号未注册或允许绑定
+        steps: 调用绑定接口提交第三方身份与手机号→观察接口返回
+        test_data: 平台=QQ，手机号=13800138000
+        expected: 接口返回绑定成功，账号建立关联关系
+      - id: TC_028
+        name: 第三方绑定接口拒绝已被占用手机号
+        type: 逆向
+        priority: P1
+        preconditions: 目标手机号已绑定其他第三方账号或存在冲突
+        steps: 调用绑定接口提交冲突手机号→观察接口返回
+        test_data: 平台=微信，手机号=13900139000
+        expected: 接口返回绑定冲突错误，不建立新关联
+  - feature: 账号状态与登出接口
+    test_cases:
+      - id: TC_029
+        name: 登出接口成功清理会话
+        type: 正向
+        priority: P0
+        preconditions: 用户已登录且Token有效
+        steps: 调用登出接口→观察接口返回→再次携带旧Token访问受保护资源
+        test_data: Token=valid_token
+        expected: 接口返回登出成功，旧Token失效，受保护资源访问被拒绝
+      - id: TC_030
+        name: 过期Token访问接口被拒绝
+        type: 逆向
+        priority: P0
+        preconditions: Token已过期
+        steps: 携带过期Token调用受保护接口→观察接口返回
+        test_data: Token=expired_token
+        expected: 接口返回未授权或Token失效错误
+      - id: TC_031
+        name: 单点登录新设备登录后旧Token失效
+        type: 逆向
+        priority: P0
+        preconditions: 同一账号已在设备A登录
+        steps: 使用同一账号在设备B登录→再使用设备A旧Token访问接口→观察返回
+        test_data: 账号=13800138000
+        expected: 设备A旧Token失效，旧会话被踢下线
+      - id: TC_032
+        name: 退出登录后再次调用登出接口幂等处理
+        type: 边界
+        priority: P2
+        preconditions: 用户已完成一次登出
+        steps: 对同一Token再次调用登出接口→观察接口返回
+        test_data: Token=already_logout_token
+        expected: 接口返回幂等结果，不报系统错误

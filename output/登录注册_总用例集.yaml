@@ -1,0 +1,321 @@
+verdict: 通过
+issues: []
+features:
+  - feature: 登录页基础布局与入口
+    test_cases:
+      - id: TC_001
+        name: 登录页核心控件完整展示
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页
+        steps: 访问登录页→观察页面首屏展示
+        test_data: 无
+        expected: 页面正确展示手机号输入框、密码框、登录按钮、验证码登录入口、忘记密码入口、注册入口、第三方登录入口和协议勾选项
+      - id: TC_002
+        name: 登录页默认展示账号密码登录模式
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页
+        steps: 访问登录页→观察默认登录方式
+        test_data: 无
+        expected: 页面默认处于账号密码登录模式，相关控件可见且可操作
+      - id: TC_003
+        name: 登录页切换到验证码登录模式
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页
+        steps: 点击验证码登录tab→观察页面变化
+        test_data: 无
+        expected: 页面切换到验证码登录模式，手机号输入框和验证码相关控件显示正常，密码框隐藏或不可用
+      - id: TC_004
+        name: 登录页按钮与链接点击区域可正常响应
+        type: 边界
+        priority: P2
+        preconditions: 用户打开登录页
+        steps: 分别点击登录按钮、忘记密码、注册入口、第三方登录图标→观察跳转与反馈
+        test_data: 无
+        expected: 各入口点击响应准确，无错位、无误触、无卡顿
+  - feature: 手机号输入与实时校验
+    test_cases:
+      - id: TC_005
+        name: 输入合法手机号后不提示错误
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页或注册页
+        steps: 在手机号输入框输入合法手机号→观察实时提示
+        test_data: 手机号=13800138000
+        expected: 手机号输入通过格式校验，不显示错误提示
+      - id: TC_006
+        name: 输入非法手机号时实时高亮提示
+        type: 逆向
+        priority: P0
+        preconditions: 用户打开登录页或注册页
+        steps: 在手机号输入框输入非法手机号→观察页面提示
+        test_data: 手机号=12345
+        expected: 输入框实时提示手机号格式错误，状态高亮为异常态
+      - id: TC_007
+        name: 手机号输入框失焦后仍保留已输入内容
+        type: 正向
+        priority: P1
+        preconditions: 用户打开登录页或注册页
+        steps: 输入手机号→切换焦点到其他控件→返回观察内容
+        test_data: 手机号=13800138000
+        expected: 输入内容被正确保留，不被清空
+      - id: TC_008
+        name: 手机号输入超长时自动限制长度
+        type: 边界
+        priority: P1
+        preconditions: 用户打开登录页或注册页
+        steps: 连续输入超过11位手机号→观察输入框表现
+        test_data: 手机号=13800138000123
+        expected: 输入框限制长度或仅保留允许的手机号位数，不出现布局错乱
+  - feature: 密码输入与显隐切换
+    test_cases:
+      - id: TC_009
+        name: 密码输入框支持正常输入与焦点切换
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页
+        steps: 点击密码框→输入密码→切换焦点→重新查看输入框
+        test_data: 密码=Abc12345
+        expected: 密码内容正确录入并以掩码形式展示
+      - id: TC_010
+        name: 密码显隐切换按钮可正常工作
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页且密码框已输入内容
+        steps: 点击密码显隐按钮→观察明文显示→再次点击切回掩码
+        test_data: 密码=Abc12345
+        expected: 密码可在明文与掩码之间正确切换，内容不丢失
+      - id: TC_011
+        name: 密码框输入非法字符时提示规则
+        type: 逆向
+        priority: P1
+        preconditions: 用户打开登录页或注册页
+        steps: 在密码框输入纯数字或纯字母密码→观察提示
+        test_data: 密码=12345678 / abcdefgh
+        expected: 页面提示密码复杂度不符合要求
+      - id: TC_012
+        name: 密码输入框支持长度边界输入
+        type: 边界
+        priority: P1
+        preconditions: 用户打开登录页或注册页
+        steps: 分别输入8位和16位密码→观察页面提示与显示
+        test_data: 密码=Abc12345 / Abc12345Abc12345
+        expected: 边界长度输入显示正常，不出现截断、错位或闪退
+  - feature: 验证码登录与短信验证码交互
+    test_cases:
+      - id: TC_013
+        name: 切换验证码登录后页面元素展示正确
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页
+        steps: 点击验证码登录tab→观察页面控件
+        test_data: 无
+        expected: 页面展示手机号输入框、验证码获取按钮、验证码输入框和登录按钮，布局正确
+      - id: TC_014
+        name: 获取验证码后倒计时状态可见
+        type: 正向
+        priority: P0
+        preconditions: 手机号合法且位于验证码登录模式
+        steps: 输入手机号→点击获取验证码→观察按钮状态
+        test_data: 手机号=13800138000
+        expected: 按钮进入倒计时状态，文案或样式发生变化且不可重复点击
+      - id: TC_015
+        name: 倒计时期间按钮置灰且禁止重复点击
+        type: 逆向
+        priority: P0
+        preconditions: 验证码倒计时正在进行
+        steps: 连续点击获取验证码按钮→观察交互反馈
+        test_data: 手机号=13800138000
+        expected: 按钮保持置灰或禁用状态，无重复发送交互反馈
+      - id: TC_016
+        name: 验证码输入框支持粘贴与删除操作
+        type: 正向
+        priority: P1
+        preconditions: 用户已获取验证码
+        steps: 在验证码输入框中粘贴验证码→删除部分字符→重新输入→观察表现
+        test_data: 验证码=123456
+        expected: 输入框支持常规编辑操作，界面无异常
+      - id: TC_017
+        name: 短信验证码发送接口正常下发验证码
+        type: 正向
+        priority: P0
+        preconditions: 手机号格式合法且未超过发送限制
+        steps: 调用验证码发送接口→观察接口返回
+        test_data: 手机号=13800138000
+        expected: 接口返回发送成功，验证码进入有效期并可用于后续校验
+      - id: TC_018
+        name: 短信验证码发送接口拒绝重复频繁请求
+        type: 逆向
+        priority: P0
+        preconditions: 同一手机号仍处于倒计时或发送限制窗口内
+        steps: 在限制时间内再次调用验证码发送接口→观察接口返回
+        test_data: 手机号=13800138000
+        expected: 接口返回频率限制错误，不再次发送验证码
+  - feature: 注册页交互与协议勾选
+    test_cases:
+      - id: TC_019
+        name: 注册页核心控件展示完整
+        type: 正向
+        priority: P0
+        preconditions: 用户进入注册页
+        steps: 打开注册页→观察页面首屏
+        test_data: 无
+        expected: 页面正确展示手机号、验证码、密码输入框、协议勾选、注册按钮和返回登录入口
+      - id: TC_020
+        name: 未勾选协议时注册按钮触发提醒
+        type: 逆向
+        priority: P0
+        preconditions: 用户已填写手机号、验证码和密码
+        steps: 不勾选协议→点击注册按钮
+        test_data: 手机号=13800138000，密码=Abc12345
+        expected: 页面阻止注册提交，并给出需先勾选协议的提示
+      - id: TC_021
+        name: 协议弹窗可正常打开关闭
+        type: 正向
+        priority: P1
+        preconditions: 用户打开注册页或首次登录页
+        steps: 点击用户协议或隐私政策链接→查看弹窗→关闭弹窗
+        test_data: 无
+        expected: 弹窗正常展示并可关闭，关闭后返回原页面且状态保持正确
+      - id: TC_022
+        name: 协议弹窗内容可滚动查看
+        type: 边界
+        priority: P2
+        preconditions: 用户打开协议弹窗
+        steps: 在协议弹窗中上下滚动→观察内容区域
+        test_data: 无
+        expected: 长内容可完整滚动查看，页面不抖动、不遮挡、不失焦
+      - id: TC_023
+        name: 注册接口正常创建新账号
+        type: 正向
+        priority: P0
+        preconditions: 系统中不存在该手机号账号
+        steps: 调用注册接口提交手机号、验证码、密码和协议状态→观察接口返回
+        test_data: 手机号=13800138000，验证码=123456，密码=Abc12345，协议=已勾选
+        expected: 接口返回成功，创建用户账号并返回登录态或注册成功标识
+      - id: TC_024
+        name: 注册接口拒绝已存在手机号
+        type: 逆向
+        priority: P0
+        preconditions: 系统中已存在该手机号账号
+        steps: 调用注册接口提交已注册手机号→观察接口返回
+        test_data: 手机号=13900139000，验证码=123456，密码=Abc12345，协议=已勾选
+        expected: 接口返回账号已存在相关错误码或错误信息，禁止重复注册
+  - feature: 第三方登录与绑定
+    test_cases:
+      - id: TC_025
+        name: 第三方登录入口图标显示正常
+        type: 正向
+        priority: P1
+        preconditions: 用户打开登录页
+        steps: 观察第三方登录区域→查看图标与文案
+        test_data: 无
+        expected: 微信、QQ等第三方登录入口图标展示正常，样式无错位
+      - id: TC_026
+        name: 点击第三方登录后进入授权流程
+        type: 正向
+        priority: P0
+        preconditions: 用户打开登录页且第三方授权服务可用
+        steps: 点击第三方登录图标→观察页面跳转
+        test_data: 无
+        expected: 页面进入第三方授权流程或授权弹窗，交互符合预期
+      - id: TC_027
+        name: 第三方未绑定手机号时展示绑定引导页
+        type: 逆向
+        priority: P0
+        preconditions: 第三方账号未绑定手机号
+        steps: 完成第三方授权→观察后续页面
+        test_data: 第三方账号=未绑定账号
+        expected: 系统跳转绑定手机号页面，提示用户继续完成绑定
+      - id: TC_028
+        name: 第三方登录失败时展示友好反馈
+        type: 逆向
+        priority: P1
+        preconditions: 第三方授权服务返回失败
+        steps: 点击第三方登录→模拟授权失败→观察页面提示
+        test_data: 无
+        expected: 页面显示友好错误提示，不出现白屏或错误堆栈
+      - id: TC_029
+        name: 第三方授权接口正常换取登录态
+        type: 正向
+        priority: P0
+        preconditions: 第三方授权码有效
+        steps: 调用第三方授权接口提交授权码→观察接口返回
+        test_data: 授权平台=微信，授权码=valid_code
+        expected: 接口返回第三方登录成功结果并建立登录态
+      - id: TC_030
+        name: 未绑定手机号的第三方账号返回绑定要求
+        type: 逆向
+        priority: P0
+        preconditions: 第三方账号未绑定手机号
+        steps: 调用第三方登录接口→观察接口返回
+        test_data: 平台=微信
+        expected: 接口返回需要绑定手机号的结果，不直接完成登录
+  - feature: 登录状态、找回密码与异常提示
+    test_cases:
+      - id: TC_031
+        name: 登录成功后自动跳转首页
+        type: 正向
+        priority: P0
+        preconditions: 用户账号可正常登录
+        steps: 输入正确账号密码并点击登录→观察跳转
+        test_data: 手机号=13800138000，密码=Abc12345
+        expected: 页面自动跳转首页，登录态保持成功
+      - id: TC_032
+        name: Token过期后访问页面自动回到登录页
+        type: 逆向
+        priority: P0
+        preconditions: 用户登录态已过期
+        steps: 进入受保护页面→观察系统行为
+        test_data: Token=expired_token
+        expected: 页面自动跳转登录页，并提示重新登录
+      - id: TC_033
+        name: 退出登录后回到登录页且缓存清理
+        type: 正向
+        priority: P0
+        preconditions: 用户已登录
+        steps: 点击退出登录→观察页面与缓存状态
+        test_data: 无
+        expected: 页面返回登录页，本地登录态与账号缓存被清理
+      - id: TC_034
+        name: 同账号新设备登录旧设备被挤下线提示清晰
+        type: 逆向
+        priority: P1
+        preconditions: 同一账号已在设备A登录
+        steps: 使用设备B登录同一账号→观察设备A提示
+        test_data: 账号=13800138000
+        expected: 旧设备收到被挤下线提示，页面引导重新登录
+      - id: TC_035
+        name: 忘记密码页可正常进入并完成重置
+        type: 正向
+        priority: P0
+        preconditions: 用户手机号已注册
+        steps: 点击忘记密码→输入手机号→获取验证码→验证通过→设置新密码并提交
+        test_data: 手机号=13800138000，新密码=NewAbc123
+        expected: 密码重置成功，用户可使用新密码登录
+      - id: TC_036
+        name: 网络异常时页面展示统一提示
+        type: 逆向
+        priority: P1
+        preconditions: 登录或注册接口网络不可用
+        steps: 发起登录或注册操作→观察页面提示
+        test_data: 网络断开
+        expected: 页面展示网络异常或稍后重试提示，不出现崩溃
+      - id: TC_037
+        name: 接口返回5xx时页面不暴露后端错误
+        type: 逆向
+        priority: P1
+        preconditions: 后端接口返回5xx
+        steps: 点击登录或获取验证码→观察提示文案
+        test_data: 服务器返回5xx
+        expected: 页面仅展示友好提示，不展示堆栈或技术错误信息
+      - id: TC_038
+        name: 异地登录提醒弹窗可关闭且不影响主流程
+        type: 边界
+        priority: P2
+        preconditions: 系统识别到异地登录风险
+        steps: 触发异地登录提醒→关闭弹窗→继续操作
+        test_data: 异地IP
+        expected: 弹窗可正常关闭，用户可按提示继续后续操作
